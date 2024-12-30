@@ -15,11 +15,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { useState } from "react"
+import { useLoginUserMutation, useRegisterUserMutation } from "@/features/api/authApi"
+import { Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 const Login = () => {
     const [signupInput, setSingupInput] = useState({name:"",email:"",password:""})
     const [loginInput, setLoginInput] = useState({email:"",password:""})
+
+    const [registerUser, {data: registerData, error: registerError ,isLoading: registerIsLoading, isSuccess: registerIsSuccess}] = useRegisterUserMutation()
+    const [loginUser,{data: loginData, error: loginError ,isLoading: loginIsLoading, isSuccess: loginIsSuccess}] = useLoginUserMutation()
 
     const changeHandler = (e,type) => {
        const {name,value} = e.target
@@ -30,16 +36,33 @@ const Login = () => {
        }
       
     }
-    const handleRegistration = (type) => {
+    const handleRegistration = async(type) => {
        const inputData = type == "signup" ? signupInput : loginInput
+       const action = type == "signup" ? registerUser : loginUser // api call
+       await action(inputData) // input data bhejo singup ya register ka
 
        console.log(inputData)
       
     }
+    useEffect(() => {
+     if (registerIsSuccess && registerData) {
+       toast.success(registerData.message || "Registration successful")
+     }  
+     if (registerError) {
+       toast.error(registerError.data.message || "Registration failed")
+     }
+     if (loginIsSuccess && loginData) {
+       toast.success(loginData.message || "Login successful")
+     }
+     if (loginError) {
+       toast.error(loginError.data.message || "Login failed")
+     }
+
+    },[loginIsLoading,registerIsLoading,loginData,registerData,loginError,registerError])
 
 
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center w-full items-center mt-16">
         <Tabs defaultValue="account" className="w-[400px]">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="signup">Signup</TabsTrigger>
@@ -68,7 +91,15 @@ const Login = () => {
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => handleRegistration("signup")}>Signup</Button>
+            <Button disabled={registerIsLoading}  onClick={() => handleRegistration("signup")}>
+              {
+                registerIsLoading ? (
+                  <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin "/> Please wait
+                  </>
+                ) : "Signup"
+              }
+            </Button>
           </CardFooter>
         </Card>
       </TabsContent>
@@ -90,8 +121,18 @@ const Login = () => {
               <Input type="password" name="password" onChange={(e)=>changeHandler(e,"login")} value={loginInput.password} placeholder="Your Password" required={true}/>
             </div>
           </CardContent>
+          
           <CardFooter>
-            <Button onClick={() => handleRegistration("login")}>Login</Button>
+            
+            <Button disabled={loginIsLoading} onClick={() => handleRegistration("login")}> 
+              {
+                loginIsLoading ? (
+                  <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin "/> Please wait
+                  </>
+                ) : "Login"
+              }
+              </Button>
           </CardFooter>
         </Card>
       </TabsContent>
