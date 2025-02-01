@@ -10,3 +10,8 @@ export const appStore = configureStore({
        middleware: (defaultMiddleware) => defaultMiddleware().concat(authApi.middleware)
     
 })
+//after refreshing the page the user will still be logged in rtk redux query and always be user
+const initializeApp = async () => {
+       await appStore.dispatch(authApi.endpoints.loadUser.initiate({},{forceRefetch:true}))
+   }
+   initializeApp();
